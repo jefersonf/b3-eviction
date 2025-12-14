@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # --- The Loader Balancer ---
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - ingestor-1
+      - ingestor-2
+  
+  # --- Go Instance 1 ---
+  ingestor-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor
+    environment:
+      - QUEUE_ADDR=queue-service:9000
+    expose:
+      - "8080"
+
+  # --- Go Instance 2 ---
+  ingestor-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor
+    environment:
+      - QUEUE_ADDR=queue-service:9000
+    expose:
+      - "8080"
+    
+  # --- Custom Queue ---
+  queue-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.queue
+    expose:
+      - "9000"
+
+  # -- Processor (Worker) ---
+  processor:
+    build:
+      context: .
+      deckerfile: Dockerfile.processor
+    depends_on:
+      - queue-service
+      - postgres
+  
