@@ -1,5 +1,5 @@
 
-CREATE TABLE IF NOT EXISTS vote_aggregations (
+CREATE TABLE IF NOT EXISTS votes_minutely (
     bucket_minute TIMESTAMP NOT NULL, -- e.g. 2025-12-17 10:05:00
     eviction_id   TEXT NOT NULL,
     nominee_id    TEXT NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS vote_aggregations (
 );
 
 -- Convert your existing table to a hypertable (partitioned by time)
-SELECT create_hypertable('vote_aggregations', 'bucket_minute');
+SELECT create_hypertable('votes_minutely', 'bucket_minute');
 
 CREATE MATERIALIZED VIEW votes_hourly
 WITH (timescaledb.continuous) AS
@@ -17,7 +17,7 @@ SELECT
     eviction_id,
     nominee_id,
     SUM(votes) as total_votes
-FROM vote_aggregations
+FROM votes_minutely
 GROUP BY time_bucket('1 hour', bucket_minute), eviction_id, nominee_id;
 
 ALTER MATERIALIZED VIEW votes_hourly SET (timescaledb.materialized_only = false);
@@ -31,9 +31,9 @@ SELECT add_continuous_aggregate_policy('votes_hourly',
 
 
 
--- CREATE INDEX idx_vote_aggregations_eviction ON vote_aggregations (eviction_id);
--- CREATE INDEX idx_vote_aggregations_nominee ON vote_aggregations (nominee_id);
--- CREATE INDEX idx_vote_aggregations_bucket ON vote_aggregations (bucket_minute);
+-- CREATE INDEX idx_votes_minutely_eviction ON votes_minutely (eviction_id);
+-- CREATE INDEX idx_votes_minutely_nominee ON votes_minutely (nominee_id);
+-- CREATE INDEX idx_votes_minutely_bucket ON votes_minutely (bucket_minute);
 
 
 -- Case 1: Total Votes per Hour-Nominee
