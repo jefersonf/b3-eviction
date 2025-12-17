@@ -33,13 +33,13 @@ func TestIngestVote(t *testing.T) {
 	}{
 		{
 			name:           "Valid vote returns 202 Accepted",
-			payload:        `{"nominee": "abc100"}`,
+			payload:        `{"nominee_id": "abc100"}`,
 			mockReturnErr:  nil,
 			expectedStatus: http.StatusAccepted,
 		},
 		{
 			name:           "Bus failure returns 500",
-			payload:        `{"nominee": "abc100"}`,
+			payload:        `{"nominee_id": "abc100"}`,
 			mockReturnErr:  errors.New("queue full"),
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -47,20 +47,17 @@ func TestIngestVote(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// 1. Setup mock
+			// Arrange
 			mockBus := new(MockBus)
 			if tc.expectedStatus != http.StatusBadRequest {
 				mockBus.On("Publish", mock.Anything, mock.AnythingOfType("command.CastVote")).Return(tc.mockReturnErr)
 			}
-			// 2. Setup handler
 			handler := rest.NewVoteHandler(mockBus)
-			req := httptest.NewRequest(http.MethodPost, "/votes", bytes.NewBufferString(tc.payload))
+			req := httptest.NewRequest(http.MethodPost, "/vote", bytes.NewBufferString(tc.payload))
 			w := httptest.NewRecorder()
-
-			// 3. Execute
+			// Act
 			handler.HandleVote(w, req)
-
-			// 4. Assert
+			// Assert
 			assert.Equal(t, tc.expectedStatus, w.Code)
 		})
 	}
