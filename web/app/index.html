@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .chart-container { width: 80%; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="chart-container">
+        <h2>Hourly Votes Trend</h2>
+        <canvas id="voteChart"></canvas>
+    </div>
+
+    <script>
+        async function loadData() {
+            // 2. Fetch data from your Go API
+            // Replace port 8080 with your actual Go API port
+            const response = await fetch('http://localhost:3000/analytics/hourly');
+            const data = await response.json();
+
+            processAndRender(data);
+        }
+
+        function processAndRender(rawData) {
+            // 3. Process Data: Group by Nominee
+            // Chart.js needs datasets array: [{label: 'Nominee A', data: [...]}, ...]
+            const nominees = {}; 
+            
+            rawData.forEach(row => {
+                if (!nominees[row.nominee_id]) {
+                    nominees[row.nominee_id] = [];
+                }
+                nominees[row.nominee_id].push({
+                    x: row.hour, // Time on X axis
+                    y: row.votes // Votes on Y axis
+                });
+            });
+
+            // Convert to Chart.js Datasets
+            const datasets = Object.keys(nominees).map((nomId, index) => {
+                const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+                return {
+                    label: nomId,
+                    data: nominees[nomId],
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+
+            // 4. Render Chart
+            const ctx = document.getElementById('voteChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time', // Requires the date-fns adapter loaded above
+                            time: { unit: 'hour' },
+                            title: { display: true, text: 'Time' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Votes' }
+                        }
+                    }
+                }
+            });
+        }
+
+        loadData();
+
+        // Refresh every minute
+        setInterval(loadData, 60000);
+        
+    </script>
+</body>
+</html>
