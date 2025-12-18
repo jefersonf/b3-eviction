@@ -4,8 +4,9 @@ import (
 	"time"
 )
 
-// CastVote is the Command pattern.
+// CastVote is the Command to cast a vote.
 type CastVote struct {
-	NomineeID string
-	Timestamp time.Time
+	EvictionID string
+	NomineeID  string
+	Timestamp  time.Time
 }
