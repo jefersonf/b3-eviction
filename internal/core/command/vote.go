@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// CastVote is the Command to cast a vote.
+// CastVote is the command to cast a vote.
 type CastVote struct {
 	EvictionID string
 	NomineeID  string
