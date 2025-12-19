@@ -15,3 +15,8 @@ type EvictionStats struct {
 	VotesByNominee []VoteCount `json:"nominee_votes"`
 	Evicted        VoteCount   `json:"evicted"`
 }
+
+type VoteCount struct {
+	NomineeID string `json:"nominee_id"`
+	Votes     int64  `json:"votes"`
+}

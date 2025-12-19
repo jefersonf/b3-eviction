@@ -7,8 +7,3 @@ type Vote struct {
 	NomineeID  string
 	Timestamp  time.Time
 }
-
-type VoteCount struct {
-	NomineeID string
-	Votes     int64
-}
