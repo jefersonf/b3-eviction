@@ -1,0 +1,6 @@
+nginx/
+debug/
+scripts/
+.gitignore
+.DS_Store
+Makefile
