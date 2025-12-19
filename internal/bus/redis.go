@@ -19,8 +19,8 @@ type StreamBus struct {
 func NewStreamBus(addr, streamName string) *StreamBus {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: "",
+		DB:       0, // use default DB
 	})
 	return &StreamBus{Client: rdb, Stream: streamName}
 }
@@ -42,6 +42,6 @@ func (r *StreamBus) Publish(ctx context.Context, cmd command.CastVote) error {
 		return fmt.Errorf("failed to publish to stream: %w", err)
 	}
 
-	log.Printf("Published vote %s as stream ID %s\n", cmd.NomineeID, id)
+	log.Printf("Published vote to %s as stream ID %s\n", cmd.NomineeID, id)
 	return nil
 }
