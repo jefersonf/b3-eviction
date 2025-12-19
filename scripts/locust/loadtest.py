@@ -14,4 +14,4 @@ class VotingUser(FastHttpUser):
             "nominee_id": nominee,
             "eviction_id": "bbb-load-test-id"
         }
-        self.client.post("/api/vote", json=payload, name="/vote")
+        self.client.post("/vote", json=payload, name="/vote")
