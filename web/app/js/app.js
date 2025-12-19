@@ -4,7 +4,7 @@ const captchaInput = document.getElementById('captchaInput');
 const refreshBtn = document.getElementById('refreshCaptcha');
 const statusDiv = document.getElementById('status-msg');
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:8080';
 
 let currentCaptcha = '';
 let currentNominee = null;
@@ -97,7 +97,7 @@ document.getElementById('voteForm').addEventListener('submit', function(e) {
 async function submitVote() {
 
     console.log("Voting for:", currentNominee);
-    const payload = { evictionId: currentEvictionId, nominee_id: candidateName };
+    const payload = { eviction_id: currentEvictionId, nominee_id: currentNominee };
 
     try {
         const response = await fetch(`${API_URL}/vote`, {
@@ -109,7 +109,7 @@ async function submitVote() {
         });
 
         if (response.ok) {
-            statusDiv.textContent = `Vote for ${candidateName} confirmed!`;
+            statusDiv.textContent = `Vote for ${currentNominee} confirmed!`;
             statusDiv.className = 'success';
         } else {
             throw new Error('Server error');

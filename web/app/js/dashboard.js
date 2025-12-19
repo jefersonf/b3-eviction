@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:3000/api'; // endpoint to get totals
+const API_URL = 'http://localhost:8080'; // endpoint to get totals
 
 const COLORS = [
     '#3B82F6',
@@ -25,17 +25,12 @@ async function updateDashboard(evictionId) {
 }
 
 function renderDashboard(evictionData) {
-    loadData();
-    // 1. Calculate Totals
-    // Convert object {Name: Count} to Array [{name: "Ana", count: 10}, ...]
-    // console.log(evictionData)
+
     const entries = evictionData.nominee_votes;
     const totalVotes = evictionData.total_votes;
 
-    // 2. Update Headline
     document.getElementById('count-total').innerText = totalVotes;
     
-    // 3. Prepare DOM Elements
     const barContainer = document.getElementById('stacked-bar');
     const legendContainer = document.getElementById('chart-legend');
     
@@ -47,15 +42,15 @@ function renderDashboard(evictionData) {
         return;
     }
 
-    // 4. Sort entries (optional: highest votes first looks better)
+    // highest votes came first
     entries.sort((a, b) => b.votes - a.votes);
 
-    // 5. Render Bar Segments and Legend
+    // render bar segments and legend
     entries.forEach((item, index) => {
         const percentage = ((item.votes / totalVotes) * 100).toFixed(1);
         const color = COLORS[index % COLORS.length]; // Cycle colors if > 6 nominees
 
-        // --- Render Bar Segment ---
+        // render bar segment
         const segment = document.createElement('div');
         segment.className = 'bar-segment';
         segment.style.width = `${percentage}%`;
@@ -64,7 +59,7 @@ function renderDashboard(evictionData) {
         barContainer.appendChild(segment);
         console.log(barContainer);
 
-        // --- Render Legend Item ---
+        // render legend item
         const legendItem = document.createElement('div');
         legendItem.className = 'legend-item';
         legendItem.innerHTML = `
@@ -75,9 +70,10 @@ function renderDashboard(evictionData) {
     });
 }
 
+
 async function loadData() {
     try {
-        const response = await fetch(`${API_URL}/analytics/minutely`);
+        const response = await fetch(`${API_URL}/analytics/hourly`);
         const data = await response.json();
         
         processAndRender(data);
@@ -86,9 +82,9 @@ async function loadData() {
     }
 }
 
+
 function processAndRender(rawData) {
-    // 3. Process Data: Group by Nominee
-    // Chart.js needs datasets array: [{label: 'Nominee A', data: [...]}, ...]
+
     const nominees = {}; 
     
     rawData.forEach(row => {
@@ -101,7 +97,6 @@ function processAndRender(rawData) {
         });
     });
 
-    // Convert to Chart.js Datasets
     const datasets = Object.keys(nominees).map((nomId, index) => {
         return {
             label: nomId,
@@ -113,8 +108,7 @@ function processAndRender(rawData) {
             tension: 0.0
         };
     });
-
-    // 4. Render Chart
+    
     const ctx = document.getElementById('voteChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -123,14 +117,10 @@ function processAndRender(rawData) {
             responsive: true,
             scales: {
                 x: {
-                    type: 'time', // Requires the date-fns adapter loaded above
-                    time: { unit: 'minute' },
+                    type: 'time',
+                    time: { unit: 'hour' },
                     title: { display: true, text: 'Time', font: { size: 20 } },
-                    ticks: {
-                        font: {
-                            size: 18
-                        }
-                    }
+                    ticks: { font: { size: 18 } }
                 },
                 y: {
                     beginAtZero: true,
@@ -162,4 +152,4 @@ const selectEvictions = document.getElementById('evictions');
 const  evictionId = selectEvictions.options[0].value || '';
 
 loadData();
-setInterval(updateDashboard, 500, evictionId);
+setInterval(updateDashboard, 1000, evictionId);
