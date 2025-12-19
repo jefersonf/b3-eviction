@@ -39,6 +39,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to spin up the database connection pool: %v", err)
 	}
+	defer postgres.Shutdown(dbConnectionPool)
+
 	voteRepo := storage.NewVoteRepository(dbConnectionPool)
 
 	statsService := analytics.NewStatsService(voteStream)
@@ -48,9 +50,9 @@ func main() {
 	analyticsHandler := rest.NewVoteAnalyticsHandler(statsService, timelyStatsService)
 
 	router := http.NewServeMux()
-	router.HandleFunc("GET /{$}", rest.HandleHealthCheck)
-	router.HandleFunc("GET /{evictionId}", analyticsHandler.HandleEvictionStats)
 	router.HandleFunc("POST /vote", voteHandler.HandleVote)
+	router.HandleFunc("GET /stats/{$}", rest.HandleHealthCheck)
+	router.HandleFunc("GET /stats/{evictionId}", analyticsHandler.HandleEvictionStats)
 	router.HandleFunc("GET /analytics/hourly", analyticsHandler.HandleHourlyStats)
 	router.HandleFunc("GET /analytics/minutely", analyticsHandler.HandleMinutelylyStats)
 
