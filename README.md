@@ -186,3 +186,5 @@ Para armazenar os votos utilizei uma instância otimizada do Postgres chamada 'T
 
 ## Demos
 
+- [UI + Load Testing](https://youtu.be/TwWtG-HLu-s)
+- [Backend Schema and Cached Votings Stats](https://youtu.be/zFZKWlS341s)
