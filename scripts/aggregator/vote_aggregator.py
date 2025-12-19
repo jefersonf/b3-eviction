@@ -2,11 +2,12 @@ import os
 import time
 import redis
 import psycopg2
+
 from datetime import datetime
 from collections import defaultdict
 
-# --- Configuration ---
-# Redis Config
+
+# Redis config
 REDIS_HOST = os.getenv("REDIS_ADDR", "redis")
 REDIS_PORT = 6379
 STREAM_KEY = os.getenv("REDIS_STREAM", "votes")
@@ -14,11 +15,12 @@ CONSUMER_GROUP = "aggregator_group"
 # Unique name for this worker instance (useful if you scale up replicas)
 CONSUMER_NAME = f"worker_{os.getpid()}"
 
-# Postgres Config
+# Postgres config
 PG_HOST = os.getenv("POSTGRES_HOST", "postgres")
 PG_USER = os.getenv("POSTGRES_USER", "admin")
 PG_PASS = os.getenv("POSTGRES_PASSWORD", "secret")
 PG_DB   = os.getenv("POSTGRES_DB", "votings")
+
 
 def get_pg_connection():
     """Establishes a new connection to Postgres."""
@@ -33,7 +35,7 @@ def main():
     print(f"Starting Aggregator: {CONSUMER_NAME}")
     print(f"Connecting to Redis at {REDIS_HOST}:{REDIS_PORT}...")
     
-    # 1. Connect to Redis
+    # Connect to Redis
     try:
         r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
         r.ping() # Fail fast if Redis is down
@@ -41,8 +43,7 @@ def main():
         print(f"Fatal: Could not connect to Redis. {e}")
         return
 
-    # 2. Ensure Consumer Group Exists
-    # This allows us to scale workers; Redis distributes messages among them.
+    # Ensure consumer group exists
     try:
         r.xgroup_create(STREAM_KEY, CONSUMER_GROUP, id="0", mkstream=True)
         print(f"Consumer Group '{CONSUMER_GROUP}' ready.")
@@ -51,7 +52,7 @@ def main():
             raise
         print(f"Consumer Group '{CONSUMER_GROUP}' already exists.")
 
-    # 3. Main Processing Loop
+    # Main processing loop
     while True:
         try:
             # A. Read Batch
@@ -73,7 +74,7 @@ def main():
             if not messages:
                 continue
 
-            # B. Aggregation Buffer (The "Micro-Batch" Logic)
+            # B. Aggregation buffer (the "Micro-Batch" logic)
             # Key: (bucket_minute, eviction_id, nominee_id) -> Value: count
             db_buffer = defaultdict(int)
             
@@ -118,16 +119,16 @@ def main():
                      r.xack(STREAM_KEY, CONSUMER_GROUP, *processed_ids)
                 continue
 
-            # C. Write to Infrastructure
+            # C. Write to infrastructure
             try:
-                # 1. Update Real-Time Redis Counters (Instant Dashboard)
+                # 1. Update Real-Time Redis Counters (Dashboard)
                 pipeline = r.pipeline()
                 pipeline.incrby("global_vote_count", batch_total_votes)
                 for key, count in redis_counter_buffer.items():
                     pipeline.incrby(key, count)
                 pipeline.execute()
 
-                # 2. Upsert to Postgres (Historical Analytics)
+                # 2. Upsert to Postgres
                 with get_pg_connection() as conn:
                     with conn.cursor() as cur:
                         for (bucket, eviction, nominee), count in db_buffer.items():
@@ -161,6 +162,6 @@ def main():
             time.sleep(2)
 
 if __name__ == "__main__":
-    # Wait for DB to be ready (Naive check, can be improved with a retry loop)
+    # Wait for DB to be ready
     time.sleep(5) 
     main()
