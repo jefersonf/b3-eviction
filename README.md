@@ -1,10 +1,61 @@
-# BBB Eviction - Assessment
+# Laager Assessment 1 - Voting System (BBB Eviction)
 
-## Plan
+## Project dependencies
 
-- Define data models, schema and naming conventions
-- Structure project files
+- Postgres
+- Go
+- Nginx
+- Redis
 
-- I will be using mongodb for storing house guests and eviction details.
+## Use case workflows
 
+### Voting
 
+```mermaid
+---
+config:
+      theme: redux
+---
+flowchart TD
+        V(["POST /vote"])
+        V --> B["load-balancer"]
+        B --> LB{"round-robin"}
+        LB --> C["voting-api-instance-1"]
+        LB --> D["voting-api-instance-2"]
+        C --> Q["voting-queue"]
+        D --> Q
+        Q <--> A["vote-aggregator"]
+        A --> P["postgres"] 
+```
+
+### Fetching houtly analytics data
+
+```mermaid
+---
+config:
+      theme: redux
+---
+flowchart TD
+        V(["GET /analytics/hourly"])
+        V <--> B["load-balancer"]
+        B <--> LB{"round-robin"}
+        LB <--> C["voting-api-instance-1"]
+        LB <--> D["voting-api-instance-2"]
+        C & D <--> P["postgres"] 
+```
+
+### Fetching eviction stats
+
+```mermaid
+---
+config:
+      theme: redux
+---
+flowchart TD
+        V(["GET /{evictionId}"])
+        V <--> B["load-balancer"]
+        B <--> LB{"round-robin"}
+        LB <--> C["voting-api-instance-1"]
+        LB <--> D["voting-api-instance-2"]
+        C & D <--> P["voting-queue"] 
+```
