@@ -31,10 +31,10 @@ services:
     image: nginx:latest
     container_name: load-balancer
     ports:
-      - "8080:3000"
+      - "8080:80"
     volumes:
       - ./scripts/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./web/app/:/usr/share/nginx/html
+      - ./web/app/:/var/www/html
     depends_on:
       - voting-service-1
       - voting-service-2
@@ -58,7 +58,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # --- RELATIONAL DATABASE ---
+  # --- DATABASE ---
   postgres:
     image: timescale/timescaledb:latest-pg17
     environment:
@@ -98,8 +98,24 @@ services:
     volumes:
       - ./scripts/locust/loadtest.py:/mnt/locust/loadtest.py
     ports:
-        - "8089:8089"
+      - "8089:8089"
     command: -f /mnt/locust/loadtest.py
+    networks:
+      - voting_network
+
+  # --- FRONTEND/DASHBOARD ---
+  voting-app:
+    image: node:alpine
+    working_dir: /app
+    volumes:
+      - ./web/app:/app
+    ports:
+      - "3000:3000"
+    command: npx http-server -p 3000
+    depends_on:
+      - nginx
+      - redis
+      - postgres
     networks:
       - voting_network
 
