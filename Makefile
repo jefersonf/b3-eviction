@@ -15,5 +15,6 @@ stop:
 	$(DOCKER_COMPOSE) down -v
 
 clear:
+	@echo "Destroy cached data..."
 	rm -rf ./debug/pg_data/
 	rm -rf ./debug/redis_data/
