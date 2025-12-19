@@ -6,7 +6,7 @@ ENV CGO_ENABLED=0 \
 
 WORKDIR /voting-app
 
-COPY go.mod go.sum ./
+COPY go.mod ./
 
 RUN go mod download
 
