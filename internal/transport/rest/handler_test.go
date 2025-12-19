@@ -53,7 +53,7 @@ func TestIngestVote(t *testing.T) {
 				mockBus.On("Publish", mock.Anything, mock.AnythingOfType("command.CastVote")).Return(tc.mockReturnErr)
 			}
 			handler := rest.NewVoteHandler(mockBus)
-			req := httptest.NewRequest(http.MethodPost, "/vote", bytes.NewBufferString(tc.payload))
+			req := httptest.NewRequest(http.MethodPost, "/api/vote", bytes.NewBufferString(tc.payload))
 			w := httptest.NewRecorder()
 			// Act
 			handler.HandleVote(w, req)
