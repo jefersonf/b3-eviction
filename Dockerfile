@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
@@ -6,13 +6,13 @@ ENV CGO_ENABLED=0 \
 
 WORKDIR /voting-app
 
-COPY go.mod ./
-
-RUN go mod download
-
 COPY . .
 
-RUN go build -o /voting-service ./cmd/api/
+RUN go mod init b3e
+
+RUN go mod tidy
+
+RUN go build -ldflags="-s -w" -o /voting-service ./cmd/api/
 
 FROM alpine:3.21 AS final
 
