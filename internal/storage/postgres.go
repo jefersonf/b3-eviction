@@ -12,7 +12,6 @@ type voteRepository struct {
 }
 
 // NewVoteRepository accepts a connection pool, not a single connection.
-// This is critical for high-throughput concurrency.
 func NewVoteRepository(pool *pgxpool.Pool) VoteRepository {
 	return &voteRepository{pool: pool}
 }
@@ -30,7 +29,7 @@ func (r *voteRepository) GetHourlyStats() ([]domain.TimelyStat, error) {
 	}
 	defer rows.Close()
 
-	var stats []domain.TimelyStat
+	stats := make([]domain.TimelyStat, 0)
 	for rows.Next() {
 		var s domain.TimelyStat
 		if err := rows.Scan(&s.Timedate, &s.NomineeID, &s.Votes); err != nil {
@@ -43,7 +42,7 @@ func (r *voteRepository) GetHourlyStats() ([]domain.TimelyStat, error) {
 
 func (r *voteRepository) GetMinutelyStats() ([]domain.TimelyStat, error) {
 	query := `
-        SELECT bucket_minute, nominee_id, total_votes 
+        SELECT bucket_minute, nominee_id, votes 
         FROM votes_minutely 
         WHERE bucket_minute > NOW() - INTERVAL '24 hours'
         ORDER BY bucket_minute ASC, nominee_id ASC;
@@ -54,7 +53,7 @@ func (r *voteRepository) GetMinutelyStats() ([]domain.TimelyStat, error) {
 	}
 	defer rows.Close()
 
-	var stats []domain.TimelyStat
+	stats := make([]domain.TimelyStat, 0)
 	for rows.Next() {
 		var s domain.TimelyStat
 		if err := rows.Scan(&s.Timedate, &s.NomineeID, &s.Votes); err != nil {
