@@ -131,10 +131,75 @@ make
 |Verbo HTTP|Recurso|Descrição Simples|
 |-|-|-|
 |`POST`|`/vote`|Solicita um registro de um voto em um dos indicados.|
-|`GET`|`/stats/`|Retorna informação sobre a saúde da API de votação.|
+|`GET`|`/stats`|Retorna informação sobre a saúde da API de votação.|
 |`GET`|`/stats/{evictionId}`|Retorna as estatísticas de um paredão específico.|
 |`GET`|`/analytics/hourly`|Retorna o sumário de votos totais e por cada indicado a cada hora nas últimas 24 horas.|
 |`GET`|`/analytics/minutely`|Retorna o sumário de votos totais e por cada indicado a cada minuto nas últimas 24 horas.|
+
+### Request and Response
+
+#### POST /vote
+Request
+```php
+{
+    "eviction_id": string,
+    "nominee_id": string
+}
+```
+No response body.
+
+#### GET /stats
+Response
+```php
+{
+    "status": string,
+    "instance": string
+}
+```
+
+#### GET /stats/{evictionId}
+Response
+```php
+{
+    "total_votes": integer,
+    "nominee_votes": [{
+        "nominee_id": string,
+        "votes": integer
+    },
+    ...
+    ],
+    "evicted": {
+        "nominee_id": string,
+        "votes": integer
+    }
+}
+```
+
+#### GET /analytics/hourly
+Response
+```php
+[
+    {
+        "timedate": datestring,
+        "nominee_id": string,
+        "votes": integer
+    },
+    ...
+]
+```
+
+#### GET /analytics/minutely
+Response
+```php
+[
+    {
+        "timedate": datestring,
+        "nominee_id": string,
+        "votes": integer
+    },
+    ...
+]
+```
 
 ## Documentação da UI (Área de votação + Dashboard)
 
