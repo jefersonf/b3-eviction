@@ -124,13 +124,13 @@ make
 
 ## Documentação da API
 
-|Verbo HTTP|Recurso|Modelo de Resposta|Descrição Simples|
-|-|-|-|-|
-|`POST`|`/vote`|no response|Solicita um registro de um voto em um dos indicados.|
-|`GET`|`/stats/`|`{"status": string, "instance": string}`|Retorna informação sobre a saúde da API de votação.|
-|`GET`|`/stats/{evictionId}`|`{"total_votes": integer, "nominee_votes": []object, "evictied": object}`|Retorna as estatísticas de um paredão específico.|
-|`GET`|`/analytics/hourly`|`{"total_votes":11,"nominee_votes":[{"nominee_id":"bob","votes":7},{"nominee_id":"ana","votes":4}],"evicted":{"nominee_id":"bob","votes":7}}`|Retorna o sumário de votos totais e por cada indicado a cada hora nas últimas 24 horas.|
-|`GET`|`/analytics/minutely`|same as hourly format|Retorna o sumário de votos totais e por cada indicado a cada minuto nas últimas 24 horas.|
+|Verbo HTTP|Recurso|Descrição Simples|
+|-|-|-|
+|`POST`|`/vote`|Solicita um registro de um voto em um dos indicados.|
+|`GET`|`/stats/`|Retorna informação sobre a saúde da API de votação.|
+|`GET`|`/stats/{evictionId}`|Retorna as estatísticas de um paredão específico.|
+|`GET`|`/analytics/hourly`|Retorna o sumário de votos totais e por cada indicado a cada hora nas últimas 24 horas.|
+|`GET`|`/analytics/minutely`|Retorna o sumário de votos totais e por cada indicado a cada minuto nas últimas 24 horas.|
 
 ## Documentação da UI (Área de votação + Dashboard)
 
@@ -138,7 +138,7 @@ A interface de usuário tanto para votação quanto para quem assume o papel de 
 
 ### 1. Área de votação
 
-*TODO adcionar descricao e screeshots aqui*
+![Tela de Votação](/docs/artifacts/fluxo-area-de-votacao.png)
 
 ### 2. Dashboard para acompanhamento das votação ao vivo.
 
