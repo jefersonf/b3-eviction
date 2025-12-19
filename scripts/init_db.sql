@@ -29,25 +29,9 @@ SELECT add_continuous_aggregate_policy('votes_hourly',
     schedule_interval => INTERVAL '1 minute');
 
 
-
-
--- CREATE INDEX idx_votes_minutely_eviction ON votes_minutely (eviction_id);
--- CREATE INDEX idx_votes_minutely_nominee ON votes_minutely (nominee_id);
--- CREATE INDEX idx_votes_minutely_bucket ON votes_minutely (bucket_minute);
-
-
--- Case 1: Total Votes per Hour-Nominee
--- Super fast, scans very few rows
--- SELECT bucket_hour, nominee_id, total_votes 
--- FROM votes_hourly
--- ORDER BY bucket_hour DESC;
-
--- Case 2: Total Votes per Hour (All Nominees)
--- SELECT bucket_hour, SUM(total_votes) as hourly_total
--- FROM votes_hourly
--- GROUP BY bucket_hour
--- ORDER BY bucket_hour DESC;
-
--- Case 3: Grand Total Votes (The "Big Number")
--- This sums ~24 rows per day instead of ~1440 rows per day
--- SELECT SUM(total_votes) FROM votes_hourly;
+-- CREATE TABLE IF NOT EXISTS houseguests (
+--     id TEXT NOT NULL AUTO_INCREMENT,
+--     firstname TEXT NULL,
+--     lastname TEXT NULL,
+--     PRIMARY KEY (id)
+-- );
