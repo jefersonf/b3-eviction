@@ -1,51 +1,109 @@
-version: '3.8'
-
 services:
-  # --- The Loader Balancer ---
+  # --- VOTING API SERVICES ---
+  voting-service-1:
+    build:
+      context: .
+    image: voting-api:local
+    environment:
+      - INSTANCE_NAME=voting-api-svc-1
+      - QUEUE_ADDR=redis:6379
+      - QUEUE_NAME=votes
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - voting_network
+
+  voting-service-2:
+    image: voting-api:local
+    environment:
+      - INSTANCE_NAME=voting-api-svc-2
+      - QUEUE_ADDR=redis:6379
+      - QUEUE_NAME=votes
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - voting_network
+
+  # --- LOAD BALANCER ---
   nginx:
-    image: nginx:alpine
+    image: nginx:latest
+    container_name: load-balancer
     ports:
-      - "80:80"
+      - "8080:3000"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./scripts/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web/app/:/usr/share/nginx/html
     depends_on:
-      - ingestor-1
-      - ingestor-2
-  
-  # --- Go Instance 1 ---
-  ingestor-1:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor
-    environment:
-      - QUEUE_ADDR=queue-service:9000
-    expose:
-      - "8080"
+      - voting-service-1
+      - voting-service-2
+    networks:
+      - voting_network
 
-  # --- Go Instance 2 ---
-  ingestor-2:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor
-    environment:
-      - QUEUE_ADDR=queue-service:9000
-    expose:
-      - "8080"
-    
-  # --- Custom Queue ---
-  queue-service:
-    build:
-      context: .
-      dockerfile: Dockerfile.queue
-    expose:
-      - "9000"
+  # --- VOTING QUEUE ---
+  redis:
+    image: redis:8-alpine
+    container_name: voting-queue
+    # CRITICAL: Enables Append Only File (AOF) persistence.
+    # Without this, a crash wipes your memory and you lose votes.
+    command: redis-server --appendonly yes
+    volumes:
+      - ./debug/redis_data:/data
+    networks:
+      - voting_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # -- Processor (Worker) ---
-  processor:
+  # --- RELATIONAL DATABASE ---
+  postgres:
+    image: timescale/timescaledb:latest-pg17
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=votings
+    volumes:
+      - ./debug/pg_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - voting_network
+
+  # --- VOTE AGGREGATOR ---
+  aggregator:
+    image: voting-aggregator:local
     build:
-      context: .
-      deckerfile: Dockerfile.processor
+      context: ./scripts/aggregator/
+    container_name: voting-aggregator
+    environment:
+      - REDIS_ADDR=redis
+      - REDIS_STREAM=votes
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=votings
     depends_on:
-      - queue-service
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+    networks:
+      - voting_network
+
+  # --- LOAD TESTER / TEST-ONLY ---
+  load-test:
+    image: locustio/locust
+    volumes:
+      - ./scripts/locust/loadtest.py:/mnt/locust/loadtest.py
+    ports:
+        - "8089:8089"
+    command: -f /mnt/locust/loadtest.py
+    networks:
+      - voting_network
+
+networks:
+  voting_network:
+    driver: bridge
   
