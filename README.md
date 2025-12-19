@@ -5,7 +5,7 @@ Este projeto implementa um sistema de votação de alta performance, inspirado n
 ## Tecnologias Utilizadas
 
 <p align="center">
-      <img src="docs/artifacts/ai-generated-arch-banner.png" alt="desc" width="60%" style="border-radius:10px;"/>
+      <img src="docs/artifacts/ai-generated-arch-banner.png" alt="desc" width="90%" style="border-radius:10px;"/>
 </p>
 
 - Linguagem: Go (Golang)
