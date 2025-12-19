@@ -33,13 +33,13 @@ func TestIngestVote(t *testing.T) {
 	}{
 		{
 			name:           "Valid vote returns 202 Accepted",
-			payload:        `{"nominee_id": "abc100"}`,
+			payload:        `{"nominee_id": "abc100", "eviction_id": "eee"}`,
 			mockReturnErr:  nil,
 			expectedStatus: http.StatusAccepted,
 		},
 		{
 			name:           "Bus failure returns 500",
-			payload:        `{"nominee_id": "abc100"}`,
+			payload:        `{"nominee_id": "abc100", "eviction_id": "eee"}`,
 			mockReturnErr:  errors.New("queue full"),
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -53,7 +53,7 @@ func TestIngestVote(t *testing.T) {
 				mockBus.On("Publish", mock.Anything, mock.AnythingOfType("command.CastVote")).Return(tc.mockReturnErr)
 			}
 			handler := rest.NewVoteHandler(mockBus)
-			req := httptest.NewRequest(http.MethodPost, "/api/vote", bytes.NewBufferString(tc.payload))
+			req := httptest.NewRequest(http.MethodPost, "/vote", bytes.NewBufferString(tc.payload))
 			w := httptest.NewRecorder()
 			// Act
 			handler.HandleVote(w, req)
