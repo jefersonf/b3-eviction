@@ -1,15 +1,25 @@
-# Laager Assessment 1 - Voting System (BBB Eviction)
+# Laager Assessment 1 - Sistema de Votação (BBB Eviction)
 
-## Project dependencies
+Este projeto implementa um sistema de votação de alta performance, inspirado nos mecanismos de "paredão" do Big Brother Brasil (BBB). O objetivo é processar votos de forma escalável, permitindo também a consulta de estatísticas em tempo real.
 
-- Postgres
-- Go
-- Nginx
-- Redis
+### Tecnologias Utilizadas
 
-## Use case workflows
+- Linguagem: Go (Golang)
+- Banco de Dados: PostgreSQL (instancia otimizada com timescaledb)
+- Cache/Fila: Redis
+- Proxy/Load Balancer: Nginx
+- Frontend: JavaScript, HTML, CSS
+- Infraestrutura: Docker & Docker Compose
 
-### Voting
+### Arquitetura e Fluxos
+
+O sistema é dividido em três fluxos principais para garantir performance e consistência:
+
+#### 1. Votação (POST /vote)
+Processa o voto do usuário e o enfileira para contabilização assíncrona.
+
+<details open>
+      <summary> Mostrar fluxo de voto </summary>
 
 ```mermaid
 ---
@@ -28,7 +38,14 @@ flowchart TD
         A --> P["postgres"] 
 ```
 
-### Fetching houtly analytics data
+</details>
+
+#### 2. Analytics Horário (GET /analytics/hourly)
+
+Recupera dados consolidados por hora diretamente do banco de dados persistente.
+
+<details>
+      <summary> Mostrar fluxo de consulta das estatísticas por hora. </summary>
 
 ```mermaid
 ---
@@ -44,7 +61,15 @@ flowchart TD
         C & D <--> P["postgres"] 
 ```
 
-### Fetching eviction stats
+</details>
+
+#### 3. Estatísticas do Paredão (GET /stats/{evictionId})
+
+Consulta o estado atual da votação, geralmente acessando dados em cache (Redis) para rapidez.
+
+
+<details>
+      <summary> Mostrar fluxo de consulta das estatísticas da votação </summary>
 
 ```mermaid
 ---
