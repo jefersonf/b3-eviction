@@ -1,0 +1,98 @@
+body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+
+.dashboard-container {
+    margin: 20px auto;
+    font-family: system-ui, sans-serif;
+    font-size: 18pt;
+}
+
+.cards-container {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+.chart-container { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.total-card {
+    text-align: center;
+    flex: 1;
+}
+
+.card p {
+    margin: 0;
+}
+
+.total-card .count {
+    font-size: 8rem;
+    font-weight: bold;
+    margin: 10px 0 0;
+}
+
+.chart-card {
+    flex: 1;
+}
+
+.stacked-bar-container {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.stacked-bar {
+    width: 100%;
+    height: 10px;
+    display: flex;
+}
+
+.bar-segment {
+    height: 100%;
+    background-color: black;
+    transition: width 0.5s ease;
+    cursor: pointer;
+}
+
+.bar-segment:hover {
+    opacity: 0.9;
+}
+
+.chart-legend {
+    display: grid;
+    gap: 15px;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 2rem;
+    color: #555;
+}
+
+.legend-item .percentage {
+    font-size: 18pt;
+    padding: 0 10px;
+    color: #aaa;
+}
+
+.color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-top: 6px;
+    margin-right: 6px;
+    display: inline-block;
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="js/dashboard.js" defer></script>
+</head>
+<body>
+
+    <select name="eviction" id="evictions">
+        <option value="bbb-load-test-id">Current Eviction</option>
+    </select>
+
+    <div id="dashboard" class="dashboard-container">
+        <div id="cards" class="cards-container">
+            <div class="card chart-card">
+                <p>Vote Distribution</p>
+                
+                <div class="stacked-bar-container">
+                    <div id="stacked-bar" class="stacked-bar"></div>
+                </div>
+
+                <div id="chart-legend" class="chart-legend"></div>
+            </div>
+
+            <div class="card total-card">
+                <p>Total Votes</p>
+                <p class="count" id="count-total">0</p>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <p>Hourly Votes Trend</p>
+            <canvas id="voteChart" height="80"></canvas>
+        </div>
+    </div>
+
+</body>
+</html>

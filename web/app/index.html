@@ -2,302 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Voting Analytics</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Agora!</title>
 
-        .dashboard-container {
-            margin: 20px auto;
-            font-family: system-ui, sans-serif;
-            font-size: 18pt;
-        }
-
-        .cards-container {
-            display: flex;
-            gap: 20px;
-            padding-bottom: 20px;
-        }
-
-        .chart-container { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        /* Dashboard Layout */
-
-        /* Card Styling */
-        .card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .total-card {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .card p {
-            margin: 0;
-        }
-
-        .total-card .count {
-            font-size: 8rem;
-            font-weight: bold;
-            margin: 10px 0 0;
-        }
-
-        .chart-card {
-            flex: 1;
-        }
-
-        /* Stacked Bar Styling */
-        .stacked-bar-container {
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            overflow: hidden; /* Ensures inner bars don't spill out */
-            margin: 20px 0;
-        }
-        
-        .stacked-bar {
-            width: 100%;
-            height: 10px;
-            display: flex; /* Makes segments sit side-by-side */
-        }
-
-        .bar-segment {
-            height: 100%;
-            background-color: black;
-            transition: width 0.5s ease; /* Smooth animation on update */
-            cursor: pointer;
-        }
-
-        .bar-segment:hover {
-            opacity: 0.9;
-        }
-
-        /* Legend Styling */
-        .chart-legend {
-            display: grid;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            font-size: 2rem;
-            color: #555;
-        }
-
-        .legend-item .percentage {
-            font-size: 18pt;
-            padding: 0 10px;
-            color: #aaa;
-        }
-
-        .color-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-top: 6px;
-            margin-right: 6px;
-            display: inline-block;
-        }
-    
-    </style>
+    <link rel="stylesheet" href="css/voting-page.css">
+    <script src="js/app.js" defer></script>
 </head>
 <body>
 
-    <div id="dashboard" class="dashboard-container">
+    <nav>
+        <a href="/dashboard.html">Acompanhar votação AO VIVO <span class="live-indicator"></span></a>
+    </nav>
 
-        <div id="cards" class="cards-container">
-            
-            <div class="card chart-card">
-                <p>Vote Distribution</p>
-                
-                <div class="stacked-bar-container">
-                    <div id="stacked-bar" class="stacked-bar"></div>
+    <form id="voteForm">
+        <div id="voting-container">
+            <h1>Quem fica?</h1>
+
+            <div class="voting-container">
+                <div class="card" id="card-ana" onclick="castVote('Ana')">
+                    <div class="avatar">👩‍🦰</div>
+                    <h2>Ana</h2>
+                    <p>A Pythonista</p>
                 </div>
 
-                <div id="chart-legend" class="chart-legend"></div>
+                <div class="card" id="card-bob" onclick="castVote('Bob')">
+                    <div class="avatar">👨‍🦱</div>
+                    <h2>Bob</h2>
+                    <p>O Javeiro</p>
+                </div>
             </div>
 
-            <div class="card total-card">
-                <p>Total Votes</p>
-                <p class="count" id="count-total">0</p>
+            <input type="hidden" id="nomineeSelect" value="">
+            
+            <div id="vote-confirmation-box" class="hidden">
+                <div class="captcha-container">
+                    <canvas id="captchaCanvas" width="200" height="60"></canvas>
+                    <button type="button" id="refreshCaptcha">↻</button>
+                    <input type="text" id="captchaInput" placeholder="Enter code" required />
+                </div>
+                
+                <button type="submit">CONFIRMAR VOTO</button>
             </div>
+
+            <div id="status-msg"></div>
+
         </div>
+    </form>
 
-        <div class="chart-container">
-            <h2>Hourly Votes Trend</h2>
-            <canvas id="voteChart" height="60"></canvas>
-        </div>
-
-    </div>
-
-    <script>
-
-        const STATS_API = 'http://localhost:3000'; // Endpoint to get totals
-
-        // A simple palette to cycle through for different nominees
-        const COLORS = [
-            '#3B82F6', // Blue
-            '#EF4444', // Red
-            '#10B981', // Green
-            '#F59E0B', // Yellow
-            '#8B5CF6', // Purple
-            '#EC4899'  // Pink
-        ];
-
-        async function updateDashboard(evictionId) {
-            try {
-                const response = await fetch(`${STATS_API}/${evictionId}`);
-                if (!response.ok) throw new Error('Failed to fetch stats');
-
-                // {"total_votes":11,"nominee_votes":[{"nominee_id":"bob","votes":7},{"nominee_id":"cob","votes":1},{"nominee_id":"ana","votes":3}],"evicted":{"nominee_id":"bob","votes":7}}
-                const data = await response.json();
-            
-                renderDashboard(data);
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function renderDashboard(evictionData) {
-            // 1. Calculate Totals
-            // Convert object {Name: Count} to Array [{name: "Ana", count: 10}, ...]
-            // console.log(evictionData)
-            const entries = evictionData.nominee_votes;
-            const totalVotes = evictionData.total_votes;
-
-            // 2. Update Headline
-            document.getElementById('count-total').innerText = totalVotes;
-            
-            // 3. Prepare DOM Elements
-            const barContainer = document.getElementById('stacked-bar');
-            const legendContainer = document.getElementById('chart-legend');
-            
-            // Clear previous render
-            // barContainer.innerHTML = '';
-            legendContainer.innerHTML = '';
-
-            if (totalVotes === 0) {
-                barContainer.innerHTML = '<div style="width:100%; text-align:center; line-height:40px; color:#888;">No votes yet</div>';
-                return;
-            }
-
-            // 4. Sort entries (optional: highest votes first looks better)
-            entries.sort((a, b) => b.votes - a.votes);
-
-            // 5. Render Bar Segments and Legend
-            entries.forEach((item, index) => {
-                const percentage = ((item.votes / totalVotes) * 100).toFixed(1);
-                const color = COLORS[index % COLORS.length]; // Cycle colors if > 6 nominees
-
-                // --- Render Bar Segment ---
-                const segment = document.createElement('div');
-                segment.className = 'bar-segment';
-                segment.style.width = `${percentage}%`;
-                segment.style.backgroundColor = color;
-                segment.title = `${item.nominee_id}: ${item.votes} votes (${percentage}%)`; // Tooltip
-                barContainer.appendChild(segment);
-                console.log(barContainer);
-
-                // --- Render Legend Item ---
-                const legendItem = document.createElement('div');
-                legendItem.className = 'legend-item';
-                legendItem.innerHTML = `
-                    <span class="color-dot" style="background-color: ${color}"></span>
-                    <strong>${item.nominee_id}</strong>: ${item.votes} <span class="percentage">(${percentage}%)</span>
-                `;
-                legendContainer.appendChild(legendItem);
-            });
-        }
-
-        async function loadData() {
-            // 2. Fetch data from your Go API
-            // Replace port 8080 with your actual Go API port
-            const response = await fetch(`${STATS_API}/analytics/hourly`);
-            const data = await response.json();
-
-            processAndRender(data);
-        }
-
-        function processAndRender(rawData) {
-            // 3. Process Data: Group by Nominee
-            // Chart.js needs datasets array: [{label: 'Nominee A', data: [...]}, ...]
-            const nominees = {}; 
-            
-            rawData.forEach(row => {
-                if (!nominees[row.nominee_id]) {
-                    nominees[row.nominee_id] = [];
-                }
-                nominees[row.nominee_id].push({
-                    x: row.timedate, // Time on X axis
-                    y: row.votes // Votes on Y axis
-                });
-            });
-
-            // Convert to Chart.js Datasets
-            const datasets = Object.keys(nominees).map((nomId, index) => {
-                return {
-                    label: nomId,
-                    data: nominees[nomId],
-                    borderColor: COLORS[index % COLORS.length],
-                    borderWidth: 3,
-                    backgroundColor: COLORS[index % COLORS.length],
-                    fill: false,
-                    tension: 0.0
-                };
-            });
-
-            // 4. Render Chart
-            const ctx = document.getElementById('voteChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: { datasets: datasets },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            type: 'time', // Requires the date-fns adapter loaded above
-                            time: { unit: 'hour' },
-                            title: { display: true, text: 'Time', font: { size: 20 } },
-                            ticks: {
-                                font: {
-                                    size: 18
-                                }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Votes', font: { size: 20 } },
-                            ticks: { font: { size: 18 } }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            titleFont: { size: 16 },
-                            bodyFont: { size: 14 }
-                        },
-                        legend: { labels: { font: { size: 20 } } }
-                    }
-                }
-            });
-        }
-
-        loadData();
-        updateDashboard("abc");
-
-        // Refresh every minute
-        setInterval(loadData, 60000);
-        setInterval(updateDashboard, 60000, "abc");
-
-    </script>
 </body>
 </html>
